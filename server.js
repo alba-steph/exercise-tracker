@@ -12,7 +12,6 @@ mongoose.connect(process.env.DB_URI, {
 
 const athletes = new mongoose.Schema({
   username: String,
-  _id: String,
   count: Number,
   log: [
     {
@@ -25,6 +24,7 @@ const athletes = new mongoose.Schema({
 const Athlete = mongoose.model("Athlete", athletes);
 
 app.use(cors());
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static("public"));
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/views/index.html");
@@ -33,8 +33,6 @@ app.get("/", (req, res) => {
 // API endpoints
 
 app.post("/api/users", function (req, res) {
-  console.log(req.body);
-
   const newAthlete = new Athlete({
     username: req.body.username,
   });
@@ -43,6 +41,7 @@ app.post("/api/users", function (req, res) {
     if (err) return console.error(err);
     res.json({
       username: data.username,
+      _id: data.id,
     });
   });
 });

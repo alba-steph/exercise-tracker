@@ -78,6 +78,62 @@ app.post("/api/users/:_id/exercises", function (req, res) {
   });
 });
 
+app.get("/api/users", function (req, res) {
+  Athlete.find({}, (err, athletes) => {
+    if (err) return console.error(err);
+    let nameIdList = athletes.map((obj) => {
+      return {
+        username: obj.username,
+        _id: obj.id,
+      };
+    });
+    res.send(nameIdList);
+  });
+});
+
+app.get("/api/users/:id/logs", function (req, res) {
+  const id = req.params.id;
+  let { from, to, limit } = req.query;
+
+  from = new Date(from + "T00:00").getTime();
+  to = new Date(to + "T00:00").getTime();
+  limit = parseInt(limit);
+
+  Athlete.findById(id, (err, athlete) => {
+    if (err) return console.error(err);
+
+    let filteredLog = athlete.log
+      .filter((e) => {
+        if (!to || !from) {
+          return true;
+        }
+        d = new Date(e.date).getTime();
+        return d >= from && d <= to;
+      })
+      .sort((a, b) => {
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      })
+      .map((e) => {
+        return {
+          description: e.description,
+          duration: e.duration,
+          date: e.date,
+        };
+      });
+
+    if (limit >= 0) {
+      filteredLog = filteredLog.slice(0, limit);
+    }
+
+    res.json({
+      username: athlete.username,
+      _id: athlete.id,
+      count: athlete.count,
+      log: filteredLog,
+    });
+  });
+});
+
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log("Your app is listening on port " + listener.address().port);
 });

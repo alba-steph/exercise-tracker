@@ -37,11 +37,43 @@ app.post("/api/users", function (req, res) {
     username: req.body.username,
   });
 
-  newAthlete.save((err, data) => {
+  newAthlete.save((err, athlete) => {
     if (err) return console.error(err);
     res.json({
-      username: data.username,
-      _id: data.id,
+      username: athlete.username,
+      _id: athlete.id,
+    });
+  });
+});
+
+app.post("/api/users/:_id/exercises", function (req, res) {
+  const id = req.params._id;
+  let ourDate = new Date(req.body.date + "T00:00").toDateString();
+  if (ourDate == "Invalid Date") {
+    ourDate = new Date().toDateString();
+  }
+
+  const exerciseToAdd = {
+    description: req.body.description,
+    duration: Number(req.body.duration),
+    date: ourDate,
+  };
+
+  Athlete.findById(id, (err, athlete) => {
+    if (err) return console.error(err);
+    athlete.log.push(exerciseToAdd);
+    athlete.count = athlete.log.length;
+
+    athlete.save((err, athlete) => {
+      if (err) return console.error(err);
+      let exercise = athlete.log[athlete.count - 1];
+      res.json({
+        username: athlete.username,
+        _id: athlete.id,
+        description: exercise.description,
+        duration: exercise.duration,
+        date: exercise.date,
+      });
     });
   });
 });
